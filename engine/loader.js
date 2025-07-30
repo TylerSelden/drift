@@ -27,7 +27,7 @@ class Manager {
     this.cb = cb;
 
     this.elem = document.getElementById(elemId);
-    this.elem.classList.remove("hidden");
+    this.elem.classList.remove("d-none");
 
     this.tick();
   }
@@ -45,7 +45,7 @@ class Manager {
     if (this.percentage !== 100) {
       requestAnimationFrame(this.tick);
     } else {
-      if (this.elem) this.elem.classList.add("hidden");
+      if (this.elem) this.elem.classList.add("d-none");
       if (this.cb) this.cb();
     }
   }

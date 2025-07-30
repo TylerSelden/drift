@@ -9,5 +9,7 @@ window.onload = async () => {
 };
 
 function start() {
-  document.querySelector("button").onclick = () => { Engine.startXR("ar") };
+  const btn = document.querySelector("button");
+  btn.onclick = () => { Engine.startXR("ar") };
+  btn.classList.remove("d-none");
 }
