@@ -16,23 +16,26 @@ function init() {
   Player = Misc.Group({ parent: Scene });
   Camera = Misc.Camera({ parent: Player });
 
-  return { Scene, Player };
+  return { Scene, Player, Renderer, Camera };
 }
 
-async function startXR(type = "vr") {
+async function startXR(type = "vr", gameloop) {
   if (!navigator.xr) return alert("This browser does not support WebXR");
   if (!await navigator.xr.isSessionSupported(`immersive-${type}`)) return alert(`This browser does not support immersive-${type}.`);
 
   const session = await navigator.xr.requestSession(`immersive-${type}`, {
     requiredFeatures: ["local-floor", "hand-tracking"]
-  }).then(onSessionStarted);
+  }).then((session) => {
+    onSessionStarted(session, gameloop);
+  });
 }
 
-function onSessionStarted(session) {
+function onSessionStarted(session, gameloop) {
   Controller.Setup(Player, Renderer);
   Renderer.xr.setReferenceSpaceType("local-floor");
   Renderer.xr.setSession(session);
   Renderer.setAnimationLoop(() => {
+    gameloop();
     Renderer.render(Scene, Camera);
   });
 }

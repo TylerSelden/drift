@@ -9,16 +9,8 @@ const HandFactory = new XRHandModelFactory();
 let Controllers = [];
 let ControllerModels = [];
 let HandModels = [];
-let Input = {
-  left: {
-    trigger: false,
-    grip: false
-  },
-  right: {
-    trigger: false,
-    grip: false
-  }
-}
+let Input;
+resetInput();
 
 function Setup(parent, Renderer) {
   for (let i = 0; i < 2; i++) {
@@ -26,19 +18,19 @@ function Setup(parent, Renderer) {
     ControllerModels[i] = Renderer.xr.getControllerGrip(i);
     HandModels[i] = Renderer.xr.getHand(i);
 
-    const name = i === 0 ? "left" : "right";
+    const hand = i === 0 ? "left" : "right";
     Controllers[i].addEventListener("selectstart", () => {
-      Input[name].trigger = true;
+      Input[hand].trigger = true;
       parent.position.x += 0.1;
     });
     Controllers[i].addEventListener("selectend", () => {
-      Input[name].trigger = false;
+      Input[hand].trigger = false;
     });
     Controllers[i].addEventListener("squeezestart", () => {
-      Input[name].grip = true;
+      Input[hand].grip = true;
     });
     Controllers[i].addEventListener("squeezeend", () => {
-      Input[name].grip = false;
+      Input[hand].grip = false;
     });
 
     ControllerModels[i].add(ModelFactory.createControllerModel(ControllerModels[i]));
@@ -49,4 +41,39 @@ function Setup(parent, Renderer) {
   }
 }
 
-export { Input, Setup };
+function resetInput() {
+  Input = {
+    left: {
+      trigger: false,
+      grip: false,
+      joystick: { x: 0, y: 0 }
+    },
+    right: {
+      trigger: false,
+      grip: false,
+      joystick: { x: 0, y: 0 }
+    }
+  }
+  return Input;
+}
+
+function PollGamepad(Renderer, Player) {
+  const session = Renderer.xr.getSession();
+  if (!session) return resetInput();
+
+  session.inputSources.forEach((src) => {
+    if (!src.gamepad) return resetInput();
+
+    const hand = src.handedness;
+    const gp = src.gamepad;
+
+    if (gp.axes.length > 0) {
+      Input[hand].joystick.x = gp.axes[2];
+      Input[hand].joystick.y = gp.axes[3];
+    }
+  });
+
+  return Input;
+}
+
+export { Setup, PollGamepad };
