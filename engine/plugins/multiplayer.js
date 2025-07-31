@@ -39,10 +39,11 @@ async function onSocketMsg({ data }) {
 
 async function onSocketOpen() {
   signal({ type: "code", data: Code });
-  await new Promise(r => setTimeout(r, 500 + Math.random() * 500));
-
-  DataChannel = Peer.createDataChannel("data");
-  setupDataChannel();
+  await new Promise(r => setTimeout(r, 500 + Math.random() * 2500));
+  if (!DataChannel) {
+    DataChannel = Peer.createDataChannel("data");
+    setupDataChannel();
+  }
 
   const offer = await Peer.createOffer();
   await Peer.setLocalDescription(offer);
