@@ -2,16 +2,18 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const Loader = new GLTFLoader();
 
-function Load(path, manager, parent, { scale = 1, position = [0, 0, 0] } = {}) {
+function Load(path, manager, { parent = null, scale = 1, position = [0, 0, 0], rotation = [0, 0, 0] } = {}) {
   Loader.load(path, (gltf) => {
     gltf.scene.scale.set(scale, scale, scale);
     gltf.scene.position.set(...position);
+    gltf.scene.rotation.set(...rotation);
 
     // traverse to set depthwrite and stuff
 
     // animations
 
     if (parent) parent.add(gltf.scene);
+    manager.submit(path, gltf.scene);
   }, (xhr) => {
     manager.logStatus(path, xhr.loaded, xhr.total);
   }, (err) => {
@@ -23,6 +25,7 @@ class Manager {
   constructor({ elemId = "loading", cb = null } = {}) {
     this.loaded = {};
     this.total = {};
+    this.models = {};
     this.percentage = 0;
     this.cb = cb;
 
@@ -34,6 +37,9 @@ class Manager {
   logStatus = (path, l, t) => {
     this.total[path] = t;
     this.loaded[path] = l;
+  }
+  submit = (path, obj) => {
+    this.models[path] = obj;
   }
   tick = () => {
     let l = Object.values(this.loaded).reduce((a, b) => a + b, 0);
