@@ -44,7 +44,9 @@ class Connection {
   async onSocketMsg({ data }) {
     const msg = JSON.parse(data);
 
-    if (msg.type === "initiate") {
+    if (msg.type === "ping") {
+      this.signal({ type: "pong" });
+    } else if (msg.type === "pong") {
       this.DataChannel = this.Peer.createDataChannel("data");
       this.setupDataChannel();
       const offer = await this.Peer.createOffer();
@@ -68,6 +70,7 @@ class Connection {
 
   onSocketOpen() {
     this.signal({ type: "code", data: this.Code });
+    this.signal({ type: "ping" });
   }
 
   Send(data) {

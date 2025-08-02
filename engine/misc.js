@@ -18,6 +18,16 @@ function Cube({ size = 0.1, color = 0xff00ff, position = [0, 0, 0], parent = nul
   return cube;
 }
 
+function Sphere({ radius = 0.1, width = 32, height = 16, color = 0xff00ff, position = [0, 0, 0], parent = null } = {}) {
+  const geo = new THREE.SphereGeometry(radius, width, height);
+  const mat = new THREE.MeshStandardMaterial({ color });
+  const sphere = new THREE.Mesh(geo, mat);
+  sphere.position.set(...position);
+
+  if (parent) parent.add(sphere);
+  return sphere;
+}
+
 function AmbientLight({ color = 0xffffff, intensity = 1, parent = null } = {}) {
   const light = new THREE.AmbientLight(color, intensity);
 
@@ -53,4 +63,4 @@ function Group({ children = [], parent = null } = {}) {
 }
 
 
-export { Box, Cube, AmbientLight, DirectionalLight, Camera, Group };
+export { Box, Cube, Sphere, AmbientLight, DirectionalLight, Camera, Group };
