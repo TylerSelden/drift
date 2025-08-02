@@ -20,29 +20,47 @@ window.onload = async () => {
   
 
   ball = Misc.Sphere({ parent: Scene });
-  window.conn = new Multiplayer.Connection("wss://server.benti.dev:8443/drift", "dev", moveBall, { onOpen, onClose });
+  window.conn = new Multiplayer.Connection("wss://server.benti.dev:8443/drift", "dev", handleData, { onOpen, onClose });
 };
 
 function start() {
   const btn = document.querySelector("button");
-  btn.onclick = () => { Engine.startXR("ar", loop, startSendPos) };
+  btn.onclick = () => { Engine.startXR("ar", loop) };
   btn.classList.remove("d-none");
 }
 
-function startSendPos() {
-  setInterval(() => {
-    if (!conn || !conn.DataChannel || conn.DataChannel.readyState !== "open") return;
-    let pos = Camera.getWorldPosition(new THREE.Vector3()).toArray();
-    conn.Send(new Float32Array(pos));
-  }, 60);
+let sendTime = Infinity;
+let peerData = [];
+function handleMultiplayer(delta) {
+  sendTime += delta;
+  if (sendTime > 1000 / 30) {
+    sendTime = 0;
+    if (conn && conn.DataChannel && conn.DataChannel.readyState === "open") {
+      let pos = Camera.getWorldPosition(new THREE.Vector3()).toArray();
+      conn.Send(new Float32Array(pos));
+    }
+  }
+
+  if (peerData.length < 2) return;
+  const now = performance.now();
+  let alpha = (now - peerData[0].time) / (peerData[1].time - peerData[0].time);
+  alpha = Math.min(Math.max(alpha, 0), 1);
+
+  ball.position.set(
+    THREE.MathUtils.lerp(peerData[0].data[0], peerData[1].data[0], alpha),
+    THREE.MathUtils.lerp(peerData[0].data[1], peerData[1].data[1], alpha),
+    THREE.MathUtils.lerp(peerData[0].data[2], peerData[1].data[2], alpha)
+  );
 }
 
 let lastLoopTime = performance.now();
 function loop() {
-  const now = performance.now()
-  const delta = (now - lastLoopTime) / 1000;
+  const now = performance.now();
+  const delta = now - lastLoopTime;
   lastLoopTime = now;
-  const speed = 2 * delta;
+  const speed = 2 * delta / 1000;
+
+  handleMultiplayer(delta);
 
   const input = Controller.PollGamepad(Renderer, Player);
   Player.rotation.y -= input.right.joystick.x * speed;
@@ -50,16 +68,19 @@ function loop() {
   const zVec = new THREE.Vector3();
   Camera.getWorldDirection(zVec).setY(0).normalize();
   const xVec = new THREE.Vector3().crossVectors(zVec, Camera.up).normalize();
-  
+
   Player.position.addScaledVector(zVec, speed * -input.left.joystick.y);
   Player.position.addScaledVector(xVec, speed * input.left.joystick.x);
 }
 
 
-function moveBall(data) {
+function handleData(data) {
   const msg = new Float32Array(data);
-  console.log(msg);
-  ball.position.set(...msg);
+  if (peerData.length > 1) peerData.shift();
+  peerData.push({
+    time: performance.now(),
+    data: msg
+  });
 }
 
 function onOpen() {
