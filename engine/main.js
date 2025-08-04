@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import * as Misc from "./misc.js";
+import * as Entities from "./entities.js";
+import * as Objects from "./objects.js";
 import * as Controller from "./controller.js";
 
 let Scene, Camera, Renderer, Player;
-
 
 function init() {
   Renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -13,8 +13,10 @@ function init() {
   document.body.appendChild(Renderer.domElement);
 
   Scene = new THREE.Scene();
-  Player = Misc.Group({ parent: Scene });
-  Camera = Misc.Camera({ parent: Player });
+  Player = Objects.Group({ parent: Scene });
+  Camera = Objects.Camera({ parent: Player });
+
+  Entities.SetContext(Scene);
 
   return { Scene, Player, Renderer, Camera };
 }
