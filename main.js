@@ -6,20 +6,14 @@ import * as Loader from "./engine/loader.js";
 import * as Controller from "./engine/controller.js";
 import * as Multiplayer from "./engine/plugins/multiplayer.js";
 
-let Scene, Player, Renderer, Camera;
+import * as Setup from "./setup.js";
+
+let Scene, Player, Renderer, Camera, World;
 
 window.onload = async () => {
-  ({ Scene, Player, Renderer, Camera } = Engine.init());
+  ({ Scene, Player, Renderer, Camera, World } = Engine.init());
 
-  let objects = [];
-
-  const manager = new Loader.Manager({ cb: start });
-  Loader.Load("./assets/thing.glb", manager, { scale: 1.05, position: [0, 0, -2] });
-  Objects.AmbientLight({ intensity: 0.8 });
-  Objects.DirectionalLight({ position: [0, 2.5, 0], intensity: 2 });
-
-  window.ent = new Entities.Entity(Objects.Cube());
-  Entities.Add(window.ent);
+  Setup.loadAssets(Scene, start);
 };
 
 function start() {
@@ -28,12 +22,8 @@ function start() {
   btn.classList.remove("d-none");
 }
 
-let lastLoopTime = performance.now();
-function loop() {
-  const now = performance.now();
-  const delta = now - lastLoopTime;
-  lastLoopTime = now;
-  const speed = 2 * delta / 1000;
+function loop(delta) {
+  const speed = 2 * delta;
 
   const input = Controller.PollGamepad(Renderer, Player);
   Player.rotation.y -= input.right.joystick.x * speed;

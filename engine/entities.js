@@ -1,9 +1,10 @@
 let Entities = {};
 
-let Scene;
+let Scene, World;
 
-function SetContext(scene) {
+function SetContext(scene, world) {
   Scene = scene;
+  World = world;
 }
 
 function Add(entity) {
@@ -11,12 +12,14 @@ function Add(entity) {
 
   Entities[id] = entity;
   Scene.add(entity.VisualObj);
+  if (entity.PhysicalObj) World.addBody(entity.PhysicalObj);
 
   return id;
 }
 
 function Remove(id) {
-  Scene.remove(Entities[id]);
+  Scene.remove(Entities[id].VisualObj);
+  if (Entities[id].PhysicalObj) World.removeBody(Entities[id].PhysicalObj);
   delete Entities[id];
 }
 
@@ -25,8 +28,14 @@ function Get(id = null) {
   return Entities[id];
 }
 
+function Interpolate() {
+  for (const id in Entities) {
+    Entities[id].Interpolate();
+  }
+}
+
 class Entity {
-  constructor(visualObj, physicalObj = null, pos = [0, 0, 0], quat = [0, 0, 0, 1]) {
+  constructor(visualObj, physicalObj = null, { pos = [0, 0, 0], quat = [0, 0, 0, 1] } = {}) {
     this.VisualObj = visualObj;
     this.PhysicalObj = physicalObj;
 
@@ -41,10 +50,18 @@ class Entity {
     this.VisualObj.quaternion.set(...quat);
 
     if (this.PhysicalObj) {
-      this.PhysicalObj.setTranslation({ x: pos[0], y: pos[1], z: pos[2] }, true);
-      this.PhysicalObj.setRotation({ x: quat[0], y: quat[1], z: quat[2] }, true);
+      this.PhysicalObj.position.set(...pos);
+      this.PhysicalObj.quaternion.set(...quat);
+      this.PhysicalObj.velocity.set(0, 0, 0);
+      this.PhysicalObj.angularVelocity.set(0, 0, 0);
     }
+  }
+
+  Interpolate() {
+    if (!this.PhysicalObj) return;
+    this.VisualObj.position.copy(this.PhysicalObj.position);
+    this.VisualObj.quaternion.copy(this.PhysicalObj.quaternion);
   }
 }
 
-export { SetContext, Add, Remove, Get, Entity };
+export { SetContext, Add, Remove, Get, Interpolate, Entity };

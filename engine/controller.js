@@ -57,7 +57,7 @@ function resetInput() {
   return Input;
 }
 
-function PollGamepad(Renderer, Player) {
+function PollGamepad(Renderer) {
   const session = Renderer.xr.getSession();
   if (!session) return resetInput();
 
