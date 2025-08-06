@@ -94,6 +94,10 @@ export function PBox({ size = [0.1, 0.1, 0.1], mass = 1, offsetPos = [0, 0, 0], 
   return PBody(mass, shape, { offsetPos, fixedRotation });
 }
 
+export function PCube({ size = 0.1, mass = 1, offsetPos = [0, 0, 0], fixedRotation = false } = {}) {
+  return PBox({ size: [size, size, size], mass, offsetPos, fixedRotation });
+}
+
 export function PSphere({ radius = 0.1, mass = 1, offsetPos = [0, 0, 0], fixedRotation = false } = {}) {
   const shape = new CANNON.Sphere(radius);
   return PBody(mass, shape, { offsetPos, fixedRotation });
