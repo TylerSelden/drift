@@ -55,6 +55,9 @@ function onSessionStarted(session, gameloop, cb) {
   Renderer.xr.setSession(session);
 
   Renderer.setAnimationLoop(() => {
+    const deltaTime = Clock.getDelta();
+
+
     const pos = Camera.getWorldPosition(new THREE.Vector3()).toArray();
     const head = pos[1] + 0.1;
     if (pos[1] !== 0) {
@@ -69,13 +72,12 @@ function onSessionStarted(session, gameloop, cb) {
         World.addBody(Player.PhysicalObj);
       }
 
-      Player.PhysicalObj.position.set(pos[0], 0, pos[2]);
+      Player.PhysicalObj.position.set(pos[0], Player.PhysicalObj.position.y, pos[2]);
     }
 
-    const delta = Clock.getDelta();
-    World.step(1 / 60, delta, 3);
+    World.step(1 / 60, deltaTime, 3);
     Entities.Interpolate(Camera.position);
-    gameloop(delta);
+    gameloop(deltaTime);
     Renderer.render(Scene, Camera);
   });
   cb();
