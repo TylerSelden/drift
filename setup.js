@@ -14,14 +14,15 @@ export function loadAssets(scene, cb) {
 }
 
 function createEntities() {
-  let rTop = 0.25;
-  let rBot = 0.25;
+  let radius = 0.23;
   let height = 1.62;
   let pos = [0, height / 2, -2];
 
-  pairs.push([Manager.models["./assets/thing.glb"], Objects.PPill({radius: rTop, height }), pos]);
-  pairs.push([Objects.VCube(), Objects.PBox(), [0, 5, -2]]);
-  pairs.push([Objects.VSphere(), Objects.PSphere(), [0.03, 8, -1.05]]);
+//  pairs.push([Manager.models["./assets/thing.glb"], Objects.PPill({ radius, height }), pos]);
+  pairs.push([Objects.VPill({ radius, height }), Objects.PPill({ radius, height }), pos]);
+  pairs.push([Objects.VCube(), Objects.PBox(), [0, 3, -2]]);
+  pairs.push([Objects.VSphere(), Objects.PSphere(), [0, 8, 0]]);
+//  pairs.push([Objects.VCube({ size: 100, color: 0xffeeaa }), null, [0, -50, 0]]);
 
   for (let pair of pairs) {
     let pos = pair[2] || [0, 0, 0];

@@ -21,7 +21,6 @@ function Setup(parent, Renderer) {
     const hand = i === 0 ? "left" : "right";
     Controllers[i].addEventListener("selectstart", () => {
       Input[hand].trigger = true;
-      parent.position.x += 0.1;
     });
     Controllers[i].addEventListener("selectend", () => {
       Input[hand].trigger = false;

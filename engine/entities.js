@@ -1,3 +1,5 @@
+import * as THREE from "three";
+
 let Entities = {};
 
 let Scene, World;
@@ -28,19 +30,18 @@ function Get(id = null) {
   return Entities[id];
 }
 
-function Interpolate() {
+function Interpolate(cameraPos) {
   for (const id in Entities) {
-    Entities[id].Interpolate();
+    Entities[id].Interpolate(cameraPos);
   }
 }
 
 class Entity {
-  constructor(visualObj, physicalObj = null, { pos = [0, 0, 0], quat = [0, 0, 0, 1] } = {}) {
+  constructor(visualObj, physicalObj = null, { pos = [0, 0, 0], quat = [0, 0, 0, 1], isPlayer = false } = {}) {
     this.VisualObj = visualObj;
     this.PhysicalObj = physicalObj;
 
-    this.IntPos = [];
-    this.IntQuat = [];
+    this.isPlayer = isPlayer;
 
     this.Teleport({ pos, quat });
   }
@@ -57,10 +58,15 @@ class Entity {
     }
   }
 
-  Interpolate() {
+  Interpolate(cameraPos) {
     if (!this.PhysicalObj) return;
     this.VisualObj.position.copy(this.PhysicalObj.position);
     this.VisualObj.quaternion.copy(this.PhysicalObj.quaternion);
+
+    if (this.isPlayer) {
+      const vec = new THREE.Vector3(cameraPos.x, 0, cameraPos.z);
+      this.VisualObj.position.sub(vec);
+    }
   }
 }
 

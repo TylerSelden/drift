@@ -15,8 +15,6 @@ function init() {
   document.body.appendChild(Renderer.domElement);
 
   Scene = new THREE.Scene();
-  Player = Objects.VGroup({ parent: Scene });
-  Camera = Objects.Camera({ parent: Player });
 
   World = new CANNON.World({ gravity: new CANNON.Vec3(0, -4, 0) });
   World.broadphase = new CANNON.SAPBroadphase(World);
@@ -33,6 +31,9 @@ function init() {
   World.addBody(ground);
 
   Entities.SetContext(Scene, World);
+  Camera = Objects.Camera();
+  Player = new Entities.Entity(Objects.VGroup({ children: [Camera] }), null, { isPlayer: true });
+  Entities.Add(Player);
 
   return { Scene, Player, Renderer, Camera, World };
 }
@@ -49,13 +50,31 @@ async function startXR(type = "vr", gameloop, cb = () => {}) {
 }
 
 function onSessionStarted(session, gameloop, cb) {
-  Controller.Setup(Player, Renderer);
+  Controller.Setup(Player.VisualObj, Renderer);
   Renderer.xr.setReferenceSpaceType("local-floor");
   Renderer.xr.setSession(session);
+
   Renderer.setAnimationLoop(() => {
+    const pos = Camera.getWorldPosition(new THREE.Vector3()).toArray();
+    const head = pos[1] + 0.1;
+    if (pos[1] !== 0) {
+      if (!Player.PhysicalObj) {
+        Player.PhysicalObj = new Objects.PPill({
+          radius: 0.25,
+          mass: 60,
+          height: head,
+          offsetPos: [0, head / 2, 0],
+          fixedRotation: true
+        });
+        World.addBody(Player.PhysicalObj);
+      }
+
+      Player.PhysicalObj.position.set(pos[0], 0, pos[2]);
+    }
+
     const delta = Clock.getDelta();
     World.step(1 / 60, delta, 3);
-    Entities.Interpolate();
+    Entities.Interpolate(Camera.position);
     gameloop(delta);
     Renderer.render(Scene, Camera);
   });

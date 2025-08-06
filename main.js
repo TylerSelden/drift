@@ -23,6 +23,7 @@ function start() {
 }
 
 function loop(delta) {
+  /*
   const speed = 2 * delta;
 
   const input = Controller.PollGamepad(Renderer, Player);
@@ -34,4 +35,5 @@ function loop(delta) {
 
   Player.position.addScaledVector(zVec, speed * -input.left.joystick.y);
   Player.position.addScaledVector(xVec, speed * input.left.joystick.x);
+  */
 }
