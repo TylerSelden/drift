@@ -38,48 +38,69 @@ function init() {
   return { Scene, Player, Renderer, Camera, World };
 }
 
-async function startXR(type = "vr", gameloop, cb = () => {}) {
+async function startXR(type = "vr", userRenderLoop = () => {}, userLogicLoop = () => {}, cb = () => {}) {
   if (!navigator.xr) return alert("This browser does not support WebXR");
   if (!await navigator.xr.isSessionSupported(`immersive-${type}`)) return alert(`This browser does not support immersive-${type}.`);
 
   const session = await navigator.xr.requestSession(`immersive-${type}`, {
     requiredFeatures: ["local-floor", "hand-tracking"]
   }).then((session) => {
-    onSessionStarted(session, gameloop, cb);
+    onSessionStarted(session, userRenderLoop, userLogicLoop, cb);
   });
 }
 
-function onSessionStarted(session, gameloop, cb) {
+function logicLoop(userLogicLoop) {
+  const cameraPos = Camera.getWorldPosition(new THREE.Vector3());
+  if (cameraPos.y !== 0) {
+    const headTop = Math.max(cameraPos.x + 0.1, 1.8);
+    if (!Player.PhysicalObj) {
+      Player.PhysicalObj = new Objects.PPill({
+        radius: 0.25,
+        mass: 60,
+        height: headTop,
+        offsetPos: [0, headTop / 2, 0],
+        fixedRotation: true
+      });
+      World.addBody(Player.PhysicalObj);
+      window.player = Player;
+    }
+
+    const target = new CANNON.Vec3(cameraPos.x, Player.PhysicalObj.position.y, cameraPos.z);
+    const displacement = target.vsub(Player.PhysicalObj.position);
+    const velocity = displacement.scale(60);
+
+    Player.PhysicalObj.velocity.set(velocity.x, Player.PhysicalObj.velocity.y, velocity.z);
+  }
+
+  if (window.asdf) {
+    Player.PhysicalObj.velocity.z = 5;
+    window.asdf = false;
+  }
+
+  World.step(1 / 60);
+  Entities.Interpolate(Camera.position.clone(), cameraPos.clone());
+}
+
+function renderLoop(userRenderLoop) {
+  const deltaTime = Clock.getDelta();
+
+  userRenderLoop(deltaTime);
+  Renderer.render(Scene, Camera);
+}
+
+function onSessionStarted(session, userRenderLoop, userLogicLoop, cb) {
   Controller.Setup(Player.VisualObj, Renderer);
   Renderer.xr.setReferenceSpaceType("local-floor");
   Renderer.xr.setSession(session);
 
+  setInterval(() => {
+    logicLoop(userLogicLoop);
+  }, 1000 / 60);
+
   Renderer.setAnimationLoop(() => {
-    const deltaTime = Clock.getDelta();
-
-
-    const pos = Camera.getWorldPosition(new THREE.Vector3()).toArray();
-    const head = pos[1] + 0.1;
-    if (pos[1] !== 0) {
-      if (!Player.PhysicalObj) {
-        Player.PhysicalObj = new Objects.PPill({
-          radius: 0.25,
-          mass: 60,
-          height: head,
-          offsetPos: [0, head / 2, 0],
-          fixedRotation: true
-        });
-        World.addBody(Player.PhysicalObj);
-      }
-
-      Player.PhysicalObj.position.set(pos[0], Player.PhysicalObj.position.y, pos[2]);
-    }
-
-    World.step(1 / 60, deltaTime, 3);
-    Entities.Interpolate(Camera.position);
-    gameloop(deltaTime);
-    Renderer.render(Scene, Camera);
+    renderLoop(userRenderLoop);
   });
+
   cb();
 }
 

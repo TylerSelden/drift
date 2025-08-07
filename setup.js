@@ -9,8 +9,9 @@ export function loadAssets(scene, cb) {
   Scene = scene;
   Cb = cb;
 
-  Manager = new Loader.Manager({ cb: createEntities });
-  Loader.Load("./assets/thing.glb", Manager, { scale: 1.05, offsetPos: [0, -0.825, 0] });
+  //Manager = new Loader.Manager({ cb: createEntities });
+  //Loader.Load("./assets/thing.glb", Manager, { scale: 1.05, offsetPos: [0, -0.825, 0] });
+  createEntities();
 }
 
 function createEntities() {
@@ -20,8 +21,8 @@ function createEntities() {
 
 //  pairs.push([Manager.models["./assets/thing.glb"], Objects.PPill({ radius, height }), pos]);
   pairs.push([Objects.VPill({ radius, height }), Objects.PPill({ radius, height }), pos]);
-  pairs.push([Objects.VCube(), Objects.PBox(), [0, 3, -2]]);
-  pairs.push([Objects.VSphere(), Objects.PSphere(), [0, 8, 0]]);
+  pairs.push([Objects.VCube(), Objects.PCube(), [0, 3, -2]]);
+//  pairs.push([Objects.VSphere(), Objects.PSphere(), [0, 8, 0]]);
 //  pairs.push([Objects.VCube({ size: 100, color: 0xffeeaa }), null, [0, -50, 0]]);
 
   for (let pair of pairs) {

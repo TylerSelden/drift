@@ -30,9 +30,9 @@ function Get(id = null) {
   return Entities[id];
 }
 
-function Interpolate(cameraPos) {
+function Interpolate(camPos, camWorldPos) {
   for (const id in Entities) {
-    Entities[id].Interpolate(cameraPos);
+    Entities[id].Interpolate(camPos, camWorldPos);
   }
 }
 
@@ -58,14 +58,18 @@ class Entity {
     }
   }
 
-  Interpolate(cameraPos) {
+  Interpolate(camPos, camWorldPos) {
     if (!this.PhysicalObj) return;
     this.VisualObj.position.copy(this.PhysicalObj.position);
     this.VisualObj.quaternion.copy(this.PhysicalObj.quaternion);
 
     if (this.isPlayer) {
-      const vec = new THREE.Vector3(cameraPos.x, 0, cameraPos.z);
-      this.VisualObj.position.sub(vec);
+      camPos.y = 0;
+      camWorldPos.y = this.PhysicalObj.position.y;
+      this.VisualObj.position.sub(camPos);
+
+      camWorldPos.sub(this.PhysicalObj.position);
+      this.VisualObj.position.add(camWorldPos);
     }
   }
 }
