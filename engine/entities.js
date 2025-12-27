@@ -30,9 +30,9 @@ function Get(id = null) {
   return Entities[id];
 }
 
-function Interpolate(camPos, camWorldPos) {
+function Update(camPos, camWorldPos) {
   for (const id in Entities) {
-    Entities[id].Interpolate(camPos, camWorldPos);
+    Entities[id].Update(camPos, camWorldPos);
   }
 }
 
@@ -58,7 +58,7 @@ class Entity {
     }
   }
 
-  Interpolate(camPos, camWorldPos) {
+  Update(camPos, camWorldPos) {
     if (!this.PhysicalObj) return;
     this.VisualObj.position.copy(this.PhysicalObj.position);
     this.VisualObj.quaternion.copy(this.PhysicalObj.quaternion);
@@ -74,4 +74,4 @@ class Entity {
   }
 }
 
-export { SetContext, Add, Remove, Get, Interpolate, Entity };
+export { SetContext, Add, Remove, Get, Update, Entity };

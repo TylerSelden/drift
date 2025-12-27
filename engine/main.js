@@ -38,6 +38,20 @@ function init() {
   return { Scene, Player, Renderer, Camera, World };
 }
 
+/*
+
+F = M * A
+
+F = 70 * A
+
+A = m / (s^2)
+A = d / (1/60) * (1/60)
+
+
+
+
+*/
+
 async function startXR(type = "vr", userRenderLoop = () => {}, userLogicLoop = () => {}, cb = () => {}) {
   if (!navigator.xr) return alert("This browser does not support WebXR");
   if (!await navigator.xr.isSessionSupported(`immersive-${type}`)) return alert(`This browser does not support immersive-${type}.`);
@@ -50,35 +64,30 @@ async function startXR(type = "vr", userRenderLoop = () => {}, userLogicLoop = (
 }
 
 function logicLoop(userLogicLoop) {
-  const cameraPos = Camera.getWorldPosition(new THREE.Vector3());
-  if (cameraPos.y !== 0) {
-    const headTop = Math.max(cameraPos.x + 0.1, 1.8);
-    if (!Player.PhysicalObj) {
-      Player.PhysicalObj = new Objects.PPill({
-        radius: 0.25,
-        mass: 60,
-        height: headTop,
-        offsetPos: [0, headTop / 2, 0],
-        fixedRotation: true
-      });
-      World.addBody(Player.PhysicalObj);
-      window.player = Player;
-    }
-
-    const target = new CANNON.Vec3(cameraPos.x, Player.PhysicalObj.position.y, cameraPos.z);
-    const displacement = target.vsub(Player.PhysicalObj.position);
-    const velocity = displacement.scale(60);
-
-    Player.PhysicalObj.velocity.set(velocity.x, Player.PhysicalObj.velocity.y, velocity.z);
+  const camWorldPos = Camera.getWorldPosition(new THREE.Vector3());
+  if (!Player.PhysicalObj) {
+    const headTop = Math.max(camWorldPos.y + 0.1, 1.8);
+    Player.PhysicalObj = new Objects.PPill({
+      radius: 0.25,
+      mass: 70,
+      height: headTop,
+      offsetPos: [0, headTop / 2, 0],
+      fixedRotation: true
+    });
+    World.addBody(Player.PhysicalObj);
+    window.player = Player;
   }
 
-  if (window.asdf) {
-    Player.PhysicalObj.velocity.z = 5;
-    window.asdf = false;
-  }
+  // Catch physicalobj up to camera's world position, ignore Y for now
+  const displacement = camWorldPos.clone().sub(Player.PhysicalObj.position);
+  const t = (1/60) * (1/60)
+  const accel = displacement.divide(new THREE.Vector3(t, 1, t));
+  const force = accel.multiply(new THREE.Vector3(70, 0, 70));
+  Player.PhysicalObj.applyForce(force);
 
+  userLogicLoop();
   World.step(1 / 60);
-  Entities.Interpolate(Camera.position.clone(), cameraPos.clone());
+  Entities.Update(Camera.position.clone(), Camera.getWorldPosition(new THREE.Vector3()));
 }
 
 function renderLoop(userRenderLoop) {
