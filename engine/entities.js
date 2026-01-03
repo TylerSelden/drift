@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-let Entities = {};
+const Entities = {};
 
 let Scene, World;
 
@@ -13,14 +13,14 @@ function Add(entity) {
   let id = crypto.randomUUID();
 
   Entities[id] = entity;
-  Scene.add(entity.VisualObj);
+  if (entity.VisualObj) Scene.add(entity.VisualObj);
   if (entity.PhysicalObj) World.addBody(entity.PhysicalObj);
 
   return id;
 }
 
 function Remove(id) {
-  Scene.remove(Entities[id].VisualObj);
+  if (Entities[id].VisualObj) Scene.remove(Entities[id].VisualObj);
   if (Entities[id].PhysicalObj) World.removeBody(Entities[id].PhysicalObj);
   delete Entities[id];
 }
@@ -30,25 +30,24 @@ function Get(id = null) {
   return Entities[id];
 }
 
-function Update(camPos, camWorldPos) {
+function Update() {
   for (const id in Entities) {
-    Entities[id].Update(camPos, camWorldPos);
+    Entities[id].Update();
   }
 }
 
 class Entity {
-  constructor(visualObj, physicalObj = null, { pos = [0, 0, 0], quat = [0, 0, 0, 1], isPlayer = false } = {}) {
+  constructor(visualObj, physicalObj = null, { pos = [0, 0, 0], quat = [0, 0, 0, 1] } = {}) {
     this.VisualObj = visualObj;
     this.PhysicalObj = physicalObj;
-
-    this.isPlayer = isPlayer;
-
-    this.Teleport({ pos, quat });
+    this.Teleport(pos, quat);
   }
 
-  Teleport({ pos = [0, 0, 0], quat = [0, 0, 0, 1]} = {}) {
-    this.VisualObj.position.set(...pos);
-    this.VisualObj.quaternion.set(...quat);
+  Teleport(pos = [0, 0, 0], quat = [0, 0, 0, 1]) {
+    if (this.VisualObj) {
+      this.VisualObj.position.set(...pos);
+      this.VisualObj.quaternion.set(...quat);
+    }
 
     if (this.PhysicalObj) {
       this.PhysicalObj.position.set(...pos);
@@ -58,19 +57,10 @@ class Entity {
     }
   }
 
-  Update(camPos, camWorldPos) {
-    if (!this.PhysicalObj) return;
+  Update() {
+    if (!this.PhysicalObj || !this.VisualObj) return;
     this.VisualObj.position.copy(this.PhysicalObj.position);
     this.VisualObj.quaternion.copy(this.PhysicalObj.quaternion);
-
-    if (this.isPlayer) {
-      camPos.y = 0;
-      camWorldPos.y = this.PhysicalObj.position.y;
-      this.VisualObj.position.sub(camPos);
-
-      camWorldPos.sub(this.PhysicalObj.position);
-      this.VisualObj.position.add(camWorldPos);
-    }
   }
 }
 

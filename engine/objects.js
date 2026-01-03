@@ -70,7 +70,6 @@ export function DirectionalLight({ color = 0xffffff, intensity = 1, shadow = fal
 
   light.add(light.target);
   if (parent) parent.add(light);
-  if (parent) parent.add(light.target);
   return light;
 }
 
@@ -91,6 +90,11 @@ export function PBox({ size = [0.1, 0.1, 0.1], mass = 1, offsetPos = [0, 0, 0], 
   size = size.map(val => val / 2);
 
   const shape = new CANNON.Box(new CANNON.Vec3(...size));
+  return PBody(mass, shape, { offsetPos, fixedRotation });
+}
+
+export function PPlane({ mass = 1, offsetPos = [0, 0, 0], fixedRotation = false } = {}) {
+  const shape = new CANNON.Plane();
   return PBody(mass, shape, { offsetPos, fixedRotation });
 }
 
